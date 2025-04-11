@@ -8,8 +8,8 @@ app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Load Whisper model (base = fast, low RAM)
-model = WhisperModel("base", compute_type="int8")  # use "int8" for minimal CPU load
+# Force CPU usage (avoids CUDA/cuDNN issues)
+model = WhisperModel("base", device="cpu", compute_type="int8")
 
 @app.route('/')
 def index():
@@ -39,8 +39,8 @@ def translate_text(text, target_lang):
         "target": target_lang,
         "format": "text"
     }, headers={"Content-Type": "application/json"})
-    
-    return response.json()['translatedText']
+
+    return response.json().get('translatedText', 'Translation failed.')
 
 if __name__ == "__main__":
     app.run(debug=True)

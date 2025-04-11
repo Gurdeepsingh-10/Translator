@@ -6,6 +6,8 @@ function startRecording() {
         mediaRecorder = new MediaRecorder(stream);
         mediaRecorder.start();
 
+        audioChunks = [];
+
         mediaRecorder.ondataavailable = event => {
             audioChunks.push(event.data);
         };
@@ -24,8 +26,6 @@ function startRecording() {
             .then(data => {
                 document.getElementById('result').innerText = data.translated_text;
             });
-
-            audioChunks = [];
         };
     });
 }

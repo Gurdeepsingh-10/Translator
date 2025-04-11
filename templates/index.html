@@ -6,19 +6,22 @@
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-  <h2>Speak something</h2>
-  <button onclick="startRecording()">Start</button>
-  <button onclick="stopRecording()">Stop</button>
+  <h2>🎤 Speak something to translate</h2>
+  
+  <div class="controls">
+    <button onclick="startRecording()">Start Recording</button>
+    <button onclick="stopRecording()">Stop Recording</button>
+  </div>
 
-  <h3>Choose Language:</h3>
   <select id="targetLang">
     <option value="es">Spanish</option>
     <option value="fr">French</option>
     <option value="de">German</option>
+    <option value="hi">Hindi</option>
   </select>
 
-  <h3>Translated Text:</h3>
-  <p id="result"></p>
+  <h3>📝 Translated Text:</h3>
+  <div id="result"></div>
 
   <script src="/static/script.js"></script>
 </body>
