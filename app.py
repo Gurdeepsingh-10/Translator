@@ -1,46 +1,39 @@
-from flask import Flask, render_template, request, jsonify
-import os
+from flask import Flask, request, jsonify
 import requests
-from werkzeug.utils import secure_filename
-from faster_whisper import WhisperModel
+from flask_cors import CORS  # To handle cross-origin requests from the React frontend
 
 app = Flask(__name__)
-UPLOAD_FOLDER = "uploads"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+CORS(app)  # Enable CORS
 
-# Force CPU usage (avoids CUDA/cuDNN issues)
-model = WhisperModel("base", device="cpu", compute_type="int8")
+# LibreTranslate API endpoint
+TRANSLATE_API = "https://libretranslate.de/translate"
 
-@app.route('/')
-def index():
-    return render_template('index.html')
+@app.route('/translate', methods=['POST'])
+def translate_text():
+    data = request.get_json()
 
-@app.route('/process', methods=['POST'])
-def process():
-    file = request.files['audio']
-    lang = request.form['lang']
+    # Check if 'text' and 'target_lang' are in the request
+    if not data or 'text' not in data or 'target_lang' not in data:
+        return jsonify({'error': 'Missing text or target language'}), 400
 
-    filepath = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
-    file.save(filepath)
-
-    text = transcribe(filepath)
-    translated_text = translate_text(text, lang)
+    text = data['text']
+    target_lang = data['target_lang']
+    
+    # Translate text
+    payload = {
+        'q': text,
+        'source': 'auto',  # Automatically detect source language
+        'target': target_lang,
+        'format': 'text'
+    }
+    response = requests.post(TRANSLATE_API, data=payload)
+    
+    if response.status_code != 200:
+        return jsonify({'error': 'Translation failed'}), 500
+    
+    translated_text = response.json().get('translatedText', '')
 
     return jsonify({'translated_text': translated_text})
 
-def transcribe(filepath):
-    segments, _ = model.transcribe(filepath)
-    return " ".join([seg.text for seg in segments])
-
-def translate_text(text, target_lang):
-    response = requests.post("https://libretranslate.de/translate", json={
-        "q": text,
-        "source": "en",
-        "target": target_lang,
-        "format": "text"
-    }, headers={"Content-Type": "application/json"})
-
-    return response.json().get('translatedText', 'Translation failed.')
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
